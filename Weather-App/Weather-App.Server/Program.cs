@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 //builder.Services.add
-builder.Services.AddDbContext<WeatherContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<WeatherContext>(options => options.UseSqlServer(Environment.GetEnvironmentVariable("DefaultConnection") ?? builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSingleton<WeatherFetcher>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<WeatherFetcher>());

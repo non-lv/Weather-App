@@ -20,7 +20,15 @@ namespace Weather_App.Server.Controllers
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherLog> Get()
         {
-            return dbContext.WeatherLogs.Where(x => x.Timestamp > DateTime.UtcNow.AddHours(-1)).ToArray();
+            try
+            {
+                return dbContext.WeatherLogs.Where(x => x.Timestamp > DateTime.UtcNow.AddHours(-1)).ToArray();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to connect to db");
+                throw;
+            }
         }
     }
 }
