@@ -12,7 +12,7 @@ using Weather_App.Server.Database;
 namespace Weather_App.Server.Migrations
 {
     [DbContext(typeof(WeatherContext))]
-    [Migration("20240916111929_InitialMigration")]
+    [Migration("20240916130748_InitialMigration")]
     partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
