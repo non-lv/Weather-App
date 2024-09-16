@@ -2,10 +2,17 @@ import { useEffect, useState } from 'react';
 import './App.css';
 
 interface Forecast {
-    date: string;
-    temperatureC: number;
-    temperatureF: number;
-    summary: string;
+    country: string;
+    city: string;
+    temp: number;
+    tempMin: number;
+    tempMax: number;
+    timestamp: string;
+}
+
+interface Location {
+    country: string;
+    city: string;
 }
 
 function App() {
@@ -13,38 +20,62 @@ function App() {
 
     useEffect(() => {
         populateWeatherData();
-    }, []);
 
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
+        const timer = setInterval(() => {
+            populateWeatherData();
+        }, 60000);
+
+        return () => {
+            clearInterval(timer);
+        };
+    }, []);
 
     return (
         <div>
             <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
+            {getContent()}
         </div>
     );
+
+    function getContent() {
+        if (forecasts === undefined) {
+            return <p><em>Loading... </em></p>;
+        } else {
+            const filter = (place: Location, forecasts: Forecast[]) => forecasts.filter(f => f.country === place.country && f.city === place.city);
+
+            const places: Location[] = [];
+            forecasts.map(f => {
+                if (places.find(p => f.city === p.city && f.country === p.country) === undefined)
+                    places.push({ country: f.country, city: f.city } as Location);
+            });
+
+            return <div>{places.map(p =>
+                <div>
+                    <h2>{p.country} - {p.city}</h2>
+                    <table className="table table-striped" aria-labelledby="tableLabel">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Temperature</th>
+                                <th>Min Temperature</th>
+                                <th>Max Temperature</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filter(p, forecasts).map(forecast =>
+                                <tr key={forecast.timestamp}>
+                                    <td>{forecast.timestamp}</td>
+                                    <td>{forecast.temp}</td>
+                                    <td>{forecast.tempMin}</td>
+                                    <td>{forecast.tempMax}</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>)}
+            </div>;
+        }
+    }
 
     async function populateWeatherData() {
         const response = await fetch('weatherforecast');
