@@ -60,12 +60,9 @@ namespace Weather_App.Server.Services
                     _logger.LogError($"Failed to retrieve data for city: {city}");
                     continue;
                 }
-                var timeZone = TimeZoneInfo.GetSystemTimeZones().Where(x => x.DisplayName.Contains(city)).SingleOrDefault() ?? TimeZoneInfo.Local;
-                var dt = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(weatherForcast.dt).UtcDateTime, timeZone);
-                var ct = weatherForcast.name;
 
                 // Duplicate entry
-                if (dbContext.WeatherLogs.Where(x => x.Timestamp == dt && x.City == ct).FirstOrDefault() != null)
+                if (dbContext.WeatherLogs.Where(x => x.UnixTimeSeconds == weatherForcast.dt && x.City == weatherForcast.name).FirstOrDefault() != null)
                     continue;
 
                 dbContext.WeatherLogs.Add(new()
@@ -75,7 +72,7 @@ namespace Weather_App.Server.Services
                     Temp = KelvinToC(weatherForcast.main.temp),
                     TempMin = KelvinToC(weatherForcast.main.temp_min),
                     TempMax = KelvinToC(weatherForcast.main.temp_max),
-                    Timestamp = dt
+                    UnixTimeSeconds = weatherForcast.dt
                 });
             }
             dbContext.SaveChanges();

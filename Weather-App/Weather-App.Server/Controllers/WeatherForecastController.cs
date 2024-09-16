@@ -2,6 +2,7 @@ using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Weather_App.Server.Database;
 using Weather_App.Server.Database.Models;
+using Weather_App.Server.Models;
 
 namespace Weather_App.Server.Controllers
 {
@@ -21,12 +22,20 @@ namespace Weather_App.Server.Controllers
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherLog> Get()
+        public IEnumerable<WeatherLogDisplay> Get()
         {
             try
             {
                 var cities = Environment.GetEnvironmentVariable("Cities")?.Split(',') ?? _configuration.GetValue<string>("Cities").Split(',');
-                return SearchLogs(cities).OrderBy(x => x.Timestamp).ToArray();
+
+                return SearchLogs(cities).OrderBy(x => x.UnixTimeSeconds).ToArray().Select(x => new WeatherLogDisplay(){ 
+                   Country = x.Country,
+                    City = x.City,
+                    Temp = x.Temp,
+                    TempMin = x.TempMin,
+                    TempMax = x.TempMax,
+                    DateTime = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(x.UnixTimeSeconds).UtcDateTime, TimeZoneInfo.Utc)
+                }).ToArray();
             }
             catch (Exception ex)
             {
@@ -41,10 +50,8 @@ namespace Weather_App.Server.Controllers
 
             foreach (string city in cities)
             {
-                var timeZone = TimeZoneInfo.GetSystemTimeZones().Where(x => x.DisplayName.Contains(city)).SingleOrDefault() ?? TimeZoneInfo.Local;
-                var datetime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone).AddHours(-1);
-
-                predicate = predicate.Or(p => p.City == city && p.Timestamp > datetime);
+                var dt = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600;
+                predicate = predicate.Or(p => p.City == city && p.UnixTimeSeconds >= dt);
             }
             return _dbContext.WeatherLogs.Where(predicate);
         }

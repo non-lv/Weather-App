@@ -1,16 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Weather_App.Server.Database.Models
+﻿namespace Weather_App.Server.Models
 {
-    public class WeatherLog
+    public class WeatherLogDisplay
     {
-        [Key]
-        public int Id { get; set; }
         public string Country { get; set; } = null!;
         public string City { get; set; } = null!;
         public int Temp { get; set; }
         public int TempMin { get; set; }
         public int TempMax { get; set; }
-        public long UnixTimeSeconds { get; set; }
+        public DateTime DateTime { get; set; }
     }
 }

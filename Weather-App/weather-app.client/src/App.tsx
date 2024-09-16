@@ -12,7 +12,7 @@ interface Forecast {
     temp: number;
     tempMin: number;
     tempMax: number;
-    timestamp: Date;
+    dateTime: Date;
 }
 
 interface Location {
@@ -63,11 +63,11 @@ function App() {
     }
 
     function createGraph(location: Location, forecasts: Forecast[]) {
-        const dates: number[] = forecasts.map(f => (new Date(f.timestamp)).getTime());
+        const dates: number[] = forecasts.map(f => (new Date(f.dateTime)).getTime());
         const lastUpdate: Date = new Date(Math.max(...dates));
 
         return <Line data={{
-            labels: forecasts.map(forecast => forecast.timestamp),
+            labels: forecasts.map(forecast => forecast.dateTime),
             datasets: [{
                 label: "Temperature",
                 data: forecasts.map(forecast => forecast.temp),
