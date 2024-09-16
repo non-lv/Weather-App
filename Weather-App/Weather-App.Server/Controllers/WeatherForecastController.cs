@@ -22,7 +22,7 @@ namespace Weather_App.Server.Controllers
         {
             try
             {
-                return dbContext.WeatherLogs.Where(x => x.Timestamp > DateTime.UtcNow.AddHours(-1)).ToArray();
+                return dbContext.WeatherLogs.Where(x => x.Timestamp > DateTime.UtcNow.AddHours(-1)).OrderBy(x => x.Timestamp).ToArray();
             }
             catch (Exception ex)
             {

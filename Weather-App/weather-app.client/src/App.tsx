@@ -77,14 +77,18 @@ function App() {
             {
                 label: "Min",
                 data: forecasts.map(forecast => forecast.tempMin),
-                backgroundColor: "#E05C5C",
-                borderColor: "#E05C5C"
+                fill: false,
+                borderDash: [5, 5],
+                backgroundColor: "#36A2EB",
+                borderColor: "#36A2EB"
             },
             {
                 label: "Max",
                 data: forecasts.map(forecast => forecast.tempMax),
-                backgroundColor: "#E05C5C",
-                borderColor: "#E05C5C"
+                fill: false,
+                borderDash: [5, 5],
+                backgroundColor: "#4BC0C0",
+                borderColor: "#4BC0C0"
             }],
         }}
             options={{
