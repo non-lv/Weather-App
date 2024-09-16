@@ -21,8 +21,8 @@ namespace Weather_App.Server.Services
             _scopeFactory = scopeFactory;
             _httpClient = new HttpClient();
 
-            _cities = configuration.GetValue<string>("Cities").Split(',');
-            _weatherApiUrl = configuration.GetValue<string>("WeatherApiUrl");
+            _cities = Environment.GetEnvironmentVariable("Cities")?.Split(',') ?? configuration.GetValue<string>("Cities").Split(',');
+            _weatherApiUrl = Environment.GetEnvironmentVariable("WeatherApiUrl") ?? configuration.GetValue<string>("WeatherApiUrl");
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -60,8 +60,8 @@ namespace Weather_App.Server.Services
                     _logger.LogError($"Failed to retrieve data for city: {city}");
                     continue;
                 }
-
-                var dt = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(weatherForcast.dt).UtcDateTime, TimeZoneInfo.Local);
+                var timeZone = TimeZoneInfo.GetSystemTimeZones().Where(x => x.DisplayName.Contains(city)).SingleOrDefault() ?? TimeZoneInfo.Local;
+                var dt = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(weatherForcast.dt).UtcDateTime, timeZone);
                 var ct = weatherForcast.name;
 
                 // Duplicate entry
