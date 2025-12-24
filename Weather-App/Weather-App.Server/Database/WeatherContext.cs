@@ -5,5 +5,5 @@ namespace Weather_App.Server.Database;
 
 public class WeatherContext(DbContextOptions<WeatherContext> options) : DbContext(options)
 {
-    public DbSet<WeatherLog> WeatherLogs { get; set; } = null!;
+    public required DbSet<WeatherLog> WeatherLogs { get; init; }
 }

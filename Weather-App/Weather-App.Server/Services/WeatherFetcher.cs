@@ -14,7 +14,7 @@ public class WeatherFetcher(ILogger<WeatherFetcher> logger, IConfiguration confi
     private readonly string? _weatherApiUrl = Environment.GetEnvironmentVariable("WeatherApiUrl") ?? configuration.GetValue<string>("WeatherApiUrl");
     private readonly Dictionary<string, long> _lastUpdate = new();
         
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (_weatherApiUrl is null or "") throw new ArgumentException($"{nameof(_weatherApiUrl)} cannot be empty");
         if (_cities.Length == 0) throw new ArgumentException($"{nameof(_cities)} cannot be empty");
@@ -22,7 +22,7 @@ public class WeatherFetcher(ILogger<WeatherFetcher> logger, IConfiguration confi
         await FetchWeatherUpdates();
             
         using PeriodicTimer timer = new(_period);
-        while (!cancellationToken.IsCancellationRequested && await timer.WaitForNextTickAsync(cancellationToken))
+        while (!stoppingToken.IsCancellationRequested && await timer.WaitForNextTickAsync(stoppingToken))
         {
             await FetchWeatherUpdates();
         }
