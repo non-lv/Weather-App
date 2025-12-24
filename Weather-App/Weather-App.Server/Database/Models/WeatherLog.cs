@@ -6,11 +6,12 @@ namespace Weather_App.Server.Database.Models
     {
         [Key]
         public int Id { get; set; }
-        public string Country { get; set; } = null!;
-        public string City { get; set; } = null!;
-        public int Temp { get; set; }
-        public int TempMin { get; set; }
-        public int TempMax { get; set; }
-        public long UnixTimeSeconds { get; set; }
+
+        public string? Country { get; init; }
+        public string? City { get; init; }
+        public int Temp { get; init; }
+        public int TempMin { get; init; }
+        public int TempMax { get; init; }
+        public long UnixTimeSeconds { get; init; }
     }
 }

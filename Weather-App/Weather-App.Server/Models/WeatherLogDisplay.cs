@@ -2,8 +2,8 @@
 {
     public class WeatherLogDisplay
     {
-        public string Country { get; set; } = null!;
-        public string City { get; set; } = null!;
+        public string? Country { get; set; }
+        public string? City { get; set; }
         public int Temp { get; set; }
         public int TempMin { get; set; }
         public int TempMax { get; set; }

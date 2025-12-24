@@ -8,28 +8,18 @@ namespace Weather_App.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration, WeatherContext dbContext) : ControllerBase
     {
-        private readonly ILogger<WeatherForecastController> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly WeatherContext _dbContext;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration, WeatherContext dbContext)
-        {
-            _logger = logger;
-            _configuration = configuration;
-            _dbContext = dbContext;
-        }
-
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherLogDisplay> Get()
         {
             try
             {
-                var cities = Environment.GetEnvironmentVariable("Cities")?.Split(',') ?? _configuration.GetValue<string>("Cities").Split(',');
+                var cities = Environment.GetEnvironmentVariable("Cities")?.Split(',') ?? configuration.GetValue<string>("Cities")?.Split(',') ?? [];
 
-                return SearchLogs(cities).OrderBy(x => x.UnixTimeSeconds).ToArray().Select(x => new WeatherLogDisplay(){ 
-                   Country = x.Country,
+                return SearchLogs(cities).OrderBy(x => x.UnixTimeSeconds).ToArray().Select(x => new WeatherLogDisplay
+                {
+                    Country = x.Country,
                     City = x.City,
                     Temp = x.Temp,
                     TempMin = x.TempMin,
@@ -39,7 +29,7 @@ namespace Weather_App.Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to connect to db");
+                logger.LogError(ex, "Failed to connect to db");
                 throw;
             }
         }
@@ -48,12 +38,12 @@ namespace Weather_App.Server.Controllers
         {
             var predicate = PredicateBuilder.New<WeatherLog>();
 
-            foreach (string city in cities)
+            foreach (var city in cities)
             {
                 var dt = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600*3;
                 predicate = predicate.Or(p => p.City == city && p.UnixTimeSeconds >= dt);
             }
-            return _dbContext.WeatherLogs.Where(predicate);
+            return dbContext.WeatherLogs.Where(predicate);
         }
     }
 }

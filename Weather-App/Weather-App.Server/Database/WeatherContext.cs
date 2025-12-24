@@ -3,9 +3,8 @@ using Weather_App.Server.Database.Models;
 
 namespace Weather_App.Server.Database
 {
-    public class WeatherContext : DbContext
+    public class WeatherContext(DbContextOptions<WeatherContext> options) : DbContext(options)
     {
-        public WeatherContext(DbContextOptions<WeatherContext> options) : base(options) { }
         public DbSet<WeatherLog> WeatherLogs { get; set; } = null!;
     }
 }

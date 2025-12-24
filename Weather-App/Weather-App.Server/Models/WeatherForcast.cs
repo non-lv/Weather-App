@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Weather_App.Server.Models
 {
@@ -61,17 +61,17 @@ namespace Weather_App.Server.Models
 
     public class Rain
     {
-        [JsonProperty("1h")]
+        [JsonPropertyName("1h")]
         public int one_h { get; set; }
-        [JsonProperty("3h")]
+        [JsonPropertyName("3h")]
         public int three_h { get; set; }
     }
 
     public class Snow
     {
-        [JsonProperty("1h")]
+        [JsonPropertyName("1h")]
         public int one_h { get; set; }
-        [JsonProperty("3h")]
+        [JsonPropertyName("3h")]
         public int three_h { get; set; }
     }
 

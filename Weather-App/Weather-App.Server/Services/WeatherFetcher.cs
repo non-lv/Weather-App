@@ -1,29 +1,16 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
 using Weather_App.Server.Database;
 using Weather_App.Server.Models;
 
 namespace Weather_App.Server.Services
 {
-    public class WeatherFetcher : BackgroundService
+    public class WeatherFetcher(ILogger<WeatherFetcher> logger, IConfiguration configuration, IServiceScopeFactory scopeFactory) : BackgroundService
     {
         private readonly TimeSpan _period = TimeSpan.FromMinutes(1);
 
-        private readonly ILogger<WeatherFetcher> _logger;
-        private readonly IServiceScopeFactory _scopeFactory;
-
-        private readonly HttpClient _httpClient;
-        private readonly string[] _cities;
-        private readonly string _weatherApiUrl;
-
-        public WeatherFetcher(ILogger<WeatherFetcher> logger, IConfiguration configuration, IServiceScopeFactory scopeFactory)
-        {
-            _logger = logger;
-            _scopeFactory = scopeFactory;
-            _httpClient = new HttpClient();
-
-            _cities = Environment.GetEnvironmentVariable("Cities")?.Split(',') ?? configuration.GetValue<string>("Cities").Split(',');
-            _weatherApiUrl = Environment.GetEnvironmentVariable("WeatherApiUrl") ?? configuration.GetValue<string>("WeatherApiUrl");
-        }
+        private readonly HttpClient _httpClient = new();
+        private readonly string[] _cities = Environment.GetEnvironmentVariable("Cities")?.Split(',') ?? configuration.GetValue<string>("Cities")?.Split(',') ?? [];
+        private readonly string _weatherApiUrl = Environment.GetEnvironmentVariable("WeatherApiUrl") ?? configuration.GetValue<string>("WeatherApiUrl") ?? string.Empty;
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
@@ -36,46 +23,46 @@ namespace Weather_App.Server.Services
 
         private async Task FetchWeatherUpdates()
         {
-            using var scope = _scopeFactory.CreateScope();
+            using var scope = scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WeatherContext>();
 
             foreach (var city in _cities)
             {
-                WeatherForcast? weatherForcast;
+                WeatherForcast? weatherForecast;
                 try
                 {
                     var uri = new Uri($"{_weatherApiUrl}{city}");
                     var resp = await _httpClient.GetAsync(uri);
                     var stream = await resp.Content.ReadAsStringAsync();
 
-                    weatherForcast = JsonConvert.DeserializeObject<WeatherForcast>(stream);
+                    weatherForecast = JsonSerializer.Deserialize<WeatherForcast>(stream);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Failed to retrieve data from OpenWeather");
+                    logger.LogError(ex, $"Failed to retrieve data from OpenWeather");
                     continue;
                 }
-                if (weatherForcast == null)
+                if (weatherForecast == null)
                 {
-                    _logger.LogError($"Failed to retrieve data for city: {city}");
+                    logger.LogError("Failed to retrieve data for city: {City}", city);
                     continue;
                 }
 
                 // Duplicate entry
-                if (dbContext.WeatherLogs.Where(x => x.UnixTimeSeconds == weatherForcast.dt && x.City == weatherForcast.name).FirstOrDefault() != null)
+                if (dbContext.WeatherLogs.FirstOrDefault(x => x.UnixTimeSeconds == weatherForecast.dt && x.City == weatherForecast.name) != null)
                     continue;
 
                 dbContext.WeatherLogs.Add(new()
                 {
-                    Country = weatherForcast.sys.country,
-                    City = weatherForcast.name,
-                    Temp = KelvinToC(weatherForcast.main.temp),
-                    TempMin = KelvinToC(weatherForcast.main.temp_min),
-                    TempMax = KelvinToC(weatherForcast.main.temp_max),
-                    UnixTimeSeconds = weatherForcast.dt
+                    Country = weatherForecast.sys.country,
+                    City = weatherForecast.name,
+                    Temp = KelvinToC(weatherForecast.main.temp),
+                    TempMin = KelvinToC(weatherForecast.main.temp_min),
+                    TempMax = KelvinToC(weatherForecast.main.temp_max),
+                    UnixTimeSeconds = weatherForecast.dt
                 });
             }
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
         }
 
         private static int KelvinToC(double kelvin) => (int)Math.Round(kelvin - 273.15);
