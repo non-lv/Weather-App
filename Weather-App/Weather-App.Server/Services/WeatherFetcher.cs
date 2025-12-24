@@ -11,11 +11,14 @@ namespace Weather_App.Server.Services
 
         private readonly HttpClient _httpClient = new();
         private readonly string[] _cities = Environment.GetEnvironmentVariable("Cities")?.Split(',') ?? configuration.GetValue<string>("Cities")?.Split(',') ?? [];
-        private readonly string _weatherApiUrl = Environment.GetEnvironmentVariable("WeatherApiUrl") ?? configuration.GetValue<string>("WeatherApiUrl") ?? string.Empty;
+        private readonly string? _weatherApiUrl = Environment.GetEnvironmentVariable("WeatherApiUrl") ?? configuration.GetValue<string>("WeatherApiUrl");
         private readonly Dictionary<string, long> _lastUpdate = new();
         
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
+            if (_weatherApiUrl is null or "") throw new ArgumentException($"{nameof(_weatherApiUrl)} cannot be empty");
+            if (_cities.Length == 0) throw new ArgumentException($"{nameof(_cities)} cannot be empty");
+            
             await FetchWeatherUpdates();
             
             using PeriodicTimer timer = new(_period);
@@ -54,9 +57,10 @@ namespace Weather_App.Server.Services
             }
 
             var toUpdate = tracked.Where(x => _lastUpdate[x.name] < x.dt).Concat(untracked);
-
+            
             foreach (var weatherForecast in toUpdate)
             {
+                _lastUpdate[weatherForecast.name] = weatherForecast.dt;
                 dbContext.WeatherLogs.Add(new()
                 {
                     Country = weatherForecast.sys.country,
