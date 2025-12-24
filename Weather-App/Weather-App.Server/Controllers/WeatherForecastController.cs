@@ -40,7 +40,7 @@ namespace Weather_App.Server.Controllers
 
             foreach (var city in cities)
             {
-                var dt = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600*3;
+                var dt = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600 * 3;
                 predicate = predicate.Or(p => p.City == city && p.UnixTimeSeconds >= dt);
             }
             return dbContext.WeatherLogs.Where(predicate);
