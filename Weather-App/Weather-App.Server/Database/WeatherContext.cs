@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Weather_App.Server.Database.Models;
 
-namespace Weather_App.Server.Database
+namespace Weather_App.Server.Database;
+
+public class WeatherContext(DbContextOptions<WeatherContext> options) : DbContext(options)
 {
-    public class WeatherContext(DbContextOptions<WeatherContext> options) : DbContext(options)
-    {
-        public DbSet<WeatherLog> WeatherLogs { get; set; } = null!;
-    }
+    public DbSet<WeatherLog> WeatherLogs { get; set; } = null!;
 }
